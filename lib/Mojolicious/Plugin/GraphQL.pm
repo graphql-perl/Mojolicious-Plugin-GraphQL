@@ -187,7 +187,7 @@ An optional root value, passed to top-level resolvers.
 
 An optional field resolver, replacing the GraphQL default.
 
-=head2 route_handler
+=head2 handler
 
 An optional route-handler, replacing the plugin's default - see example
 above for possibilities.

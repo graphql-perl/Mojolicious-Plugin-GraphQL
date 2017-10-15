@@ -89,7 +89,7 @@ An optional root value, passed to top-level resolvers.
 
 An optional field resolver, replacing the GraphQL default.
 
-## route\_handler
+## handler
 
 An optional route-handler, replacing the plugin's default - see example
 above for possibilities.

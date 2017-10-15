@@ -55,6 +55,7 @@ sub register {
     my ($c) = @_;
     if (
       $conf->{graphiql} and
+      # not as ignores Firefox-sent multi-accept: $c->accepts('', 'html') and
       ($c->req->headers->header('Accept')//'') =~ /^text\/html\b/ and
       !defined $c->req->query_params->param('raw')
     ) {

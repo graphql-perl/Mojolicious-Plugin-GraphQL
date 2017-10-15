@@ -74,7 +74,8 @@ sub register {
     $data = { errors => [ { message => $@ } ] } if $@;
     $c->render(json => $data);
   };
-  push @{$app->renderer->classes}, __PACKAGE__;
+  push @{$app->renderer->classes}, __PACKAGE__
+    unless grep $_ eq __PACKAGE__, @{$app->renderer->classes};
   $app->routes->any(\@DEFAULT_METHODS => $endpoint => $ajax_route);
 }
 

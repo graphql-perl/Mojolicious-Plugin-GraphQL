@@ -21,6 +21,10 @@ WriteMakefile(
     "warnings" => 0,
     "GraphQL" => '0.12',
   },
+  "TEST_REQUIRES" => {
+    "Mojolicious" => 0,
+    "Test::More" => "0.92",
+  },
   META_MERGE => {
     "meta-spec" => { version => 2 },
     dynamic_config => 0,

@@ -3,7 +3,7 @@ package Mojolicious::Plugin::GraphQL;
 use strict;
 use warnings;
 use Mojo::Base 'Mojolicious::Plugin';
-use Mojo::JSON qw(decode_json encode_json);
+use Mojo::JSON qw(decode_json to_json);
 use GraphQL::Execution;
 
 our $VERSION = '0.01';
@@ -39,7 +39,7 @@ sub make_code_closure {
 
 sub _safe_serialize {
   my $data = shift or return 'undefined';
-  my $json = encode_json($data);
+  my $json = to_json($data);
   $json =~ s#/#\\/#g;
   return $json;
 }

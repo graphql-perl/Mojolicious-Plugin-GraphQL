@@ -1,0 +1,12 @@
+MANIFEST.SKIP
+MANIFEST.bak
+.git\/
+^.gitignore
+^.travis.yml
+blib\/
+MYMETA\..*
+^Mojolicious-Plugin-GraphQL-\d.*
+^Makefile$
+^Makefile.bak$
+pm_to_blib
+\.swp$

@@ -19,7 +19,7 @@ WriteMakefile(
     "Mojolicious" => 0,
     "strict" => 0,
     "warnings" => 0,
-    "GraphQL" => '0.12',
+    "GraphQL" => '0.15',
   },
   "TEST_REQUIRES" => {
     "Mojolicious" => 0,

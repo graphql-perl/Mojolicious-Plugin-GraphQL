@@ -4,14 +4,14 @@ use strict;
 use warnings;
 use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::JSON qw(decode_json to_json);
-use GraphQL::Execution;
+use GraphQL::Execution qw(execute);
 
 our $VERSION = '0.01';
 
 my @DEFAULT_METHODS = qw(get post);
 my $EXECUTE = sub {
   my ($schema, $query, $root_value, $per_request, $variables, $operationName, $field_resolver) = @_;
-  GraphQL::Execution->execute(
+  execute(
     $schema,
     $query,
     $root_value,

@@ -6,7 +6,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::JSON qw(decode_json to_json);
 use GraphQL::Execution qw(execute);
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 my @DEFAULT_METHODS = qw(get post);
 my $EXECUTE = sub {

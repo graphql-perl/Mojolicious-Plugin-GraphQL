@@ -16,7 +16,7 @@ WriteMakefile(
     "ExtUtils::MakeMaker" => '6.63_03',
   },
   "PREREQ_PM" => {
-    "Mojolicious" => 0,
+    "Mojolicious" => '5.48', # Mojo::JSON::to_json
     "strict" => 0,
     "warnings" => 0,
     "GraphQL" => '0.15',

@@ -41,9 +41,12 @@ use Test::Mojo;
 my $t = Test::Mojo->new;
 
 subtest 'GraphiQL' => sub {
-  my $res = $t->get_ok('/graphql', {
+  $t->get_ok('/graphql', {
     Accept => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   })->content_like(qr/React.createElement\(GraphiQL/, 'Content as expected');
+  $t->get_ok('/graphql?query=%23%20Welcome%0A%7BhelloWorld%7D', {
+    Accept => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  })->content_like(qr/query: "# Welcome/, 'Content en/decodes right');
 };
 
 subtest 'GraphQL with POST' => sub {

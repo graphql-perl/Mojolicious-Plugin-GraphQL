@@ -345,10 +345,10 @@ add "&raw" to the end of the URL within a browser.
         onEditQuery: onEditQuery,
         onEditVariables: onEditVariables,
         onEditOperationName: onEditOperationName,
-        query: <%= $queryString %>,
-        response: <%= $resultString %>,
-        variables: <%= $variablesString %>,
-        operationName: <%= $operationName %>,
+        query: <%== $queryString %>,
+        response: <%== $resultString %>,
+        variables: <%== $variablesString %>,
+        operationName: <%== $operationName %>,
       }),
       document.body
     );

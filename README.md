@@ -60,10 +60,18 @@ Mojolicious::Plugin::GraphQL - a plugin for adding GraphQL route handlers
 This plugin allows you to easily define a route handler implementing a
 GraphQL endpoint.
 
+As of version 0.09, it will supply the necessary `promise_code`
+parameter to ["execute" in GraphQL::Execution](https://metacpan.org/pod/GraphQL::Execution#execute). This means your resolvers
+can (and indeed should) return Promise objects to function
+asynchronously. Notice not necessarily "Promises/A+" - all that's needed
+is a two-arg `then` to work fine with GraphQL.
+
 The route handler code will be compiled to behave like the following:
 
 - Passes to the [GraphQL](https://metacpan.org/pod/GraphQL) execute, possibly via your supplied handler,
-the given schema, `$root_value` and `$field_resolver`.
+the given schema, `$root_value` and `$field_resolver`. Note as above
+that the wrapper used in this plugin will supply the hash-ref matching
+["PromiseCode" in GraphQL::Type::Library](https://metacpan.org/pod/GraphQL::Type::Library#PromiseCode).
 - The action built matches POST / GET requests.
 - Returns GraphQL results in JSON form.
 

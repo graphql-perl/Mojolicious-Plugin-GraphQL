@@ -9,7 +9,7 @@ use GraphQL::Type::Library -all;
 use Module::Runtime qw(require_module);
 use Mojo::Promise;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 my @DEFAULT_METHODS = qw(get post);
 my $EXECUTE = sub {

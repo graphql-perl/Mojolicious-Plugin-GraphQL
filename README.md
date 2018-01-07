@@ -134,6 +134,11 @@ text/html` will return the GraphiQL user interface. Defaults to false.
 
 Register renderer in [Mojolicious](https://metacpan.org/pod/Mojolicious) application.
 
+# EXPORTS
+
+Exportable is the function `promise_code`, which returns a hash-ref
+suitable for passing as the 8th argument to ["execute" in GraphQL::Execution](https://metacpan.org/pod/GraphQL::Execution#execute).
+
 # SEE ALSO
 
 [GraphQL](https://metacpan.org/pod/GraphQL)

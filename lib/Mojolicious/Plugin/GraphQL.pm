@@ -8,11 +8,28 @@ use GraphQL::Execution qw(execute);
 use GraphQL::Type::Library -all;
 use Module::Runtime qw(require_module);
 use Mojo::Promise;
+use Exporter 'import';
 
 our $VERSION = '0.09';
+our @EXPORT_OK = qw(promise_code);
+
+use constant promise_code => +{
+  all => sub {
+    # current Mojo::Promise->all only works on promises, force that
+    my @promises = map is_Promise($_)
+      ? $_ : Mojo::Promise->new->resolve($_),
+      @_;
+    # only actually works when first promise-instance is a
+    # Mojo::Promise, so force it to be one. hoping will be fixed soon
+    Mojo::Promise->new->resolve->all(@promises)->then(sub { shift; @_ })
+  },
+  # currently only instance methods. not wasteful at all.
+  resolve => sub { Mojo::Promise->new->resolve(@_) },
+  reject => sub { Mojo::Promise->new->reject(@_) },
+};
 
 my @DEFAULT_METHODS = qw(get post);
-my $EXECUTE = sub {
+use constant EXECUTE => sub {
   my ($schema, $query, $root_value, $per_request, $variables, $operationName, $field_resolver) = @_;
   execute(
     $schema,
@@ -23,20 +40,7 @@ my $EXECUTE = sub {
     $operationName,
     $field_resolver,
     # promise code - not overridable
-    {
-      all => sub {
-        # current Mojo::Promise->all only works on promises, force that
-        my @promises = map is_Promise($_)
-          ? $_ : Mojo::Promise->new->resolve($_),
-          @_;
-        # only actually works when first promise-instance is a
-        # Mojo::Promise, so force it to be one. hoping will be fixed soon
-        Mojo::Promise->new->resolve->all(@promises)->then(sub { shift; @_ })
-      },
-      # currently only instance methods. not wasteful at all.
-      resolve => sub { Mojo::Promise->new->resolve(@_) },
-      reject => sub { Mojo::Promise->new->reject(@_) },
-    },
+    promise_code(),
   );
 };
 sub make_code_closure {
@@ -96,7 +100,7 @@ sub register {
       );
     }
     my $body = decode_json($c->req->body);
-    my $data = eval { $handler->($c, $body, $EXECUTE) };
+    my $data = eval { $handler->($c, $body, EXECUTE()) };
     $data = { errors => [ { message => $@ } ] } if $@;
     return $data->then(sub { $c->render(json => shift) }) if is_Promise($data);
     $c->render(json => $data);
@@ -257,6 +261,11 @@ L<Mojolicious::Plugin> and implements the following new ones.
   my $route = $plugin->register(Mojolicious->new, {schema => $schema});
 
 Register renderer in L<Mojolicious> application.
+
+=head1 EXPORTS
+
+Exportable is the function C<promise_code>, which returns a hash-ref
+suitable for passing as the 8th argument to L<GraphQL::Execution/execute>.
 
 =head1 SEE ALSO
 

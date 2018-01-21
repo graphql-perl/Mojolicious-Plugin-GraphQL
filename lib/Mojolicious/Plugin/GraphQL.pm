@@ -21,7 +21,7 @@ use constant promise_code => +{
       @_;
     # only actually works when first promise-instance is a
     # Mojo::Promise, so force it to be one. hoping will be fixed soon
-    Mojo::Promise->new->resolve->all(@promises)->then(sub { shift; @_ })
+    Mojo::Promise->all(@promises);
   },
   # currently only instance methods. not wasteful at all.
   resolve => sub { Mojo::Promise->new->resolve(@_) },

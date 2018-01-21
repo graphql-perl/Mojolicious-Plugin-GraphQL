@@ -99,8 +99,9 @@ sub register {
         variablesString  => _safe_serialize( $c->req->query_params->param('variables') ),
       );
     }
-    my $body = decode_json($c->req->body);
-    my $data = eval { $handler->($c, $body, EXECUTE()) };
+    my $data;
+    my $body = eval { decode_json($c->req->body) };
+    $data = eval { $handler->($c, $body, EXECUTE()) } if !$@;
     $data = { errors => [ { message => $@ } ] } if $@;
     return $data->then(sub { $c->render(json => shift) }) if is_Promise($data);
     $c->render(json => $data);

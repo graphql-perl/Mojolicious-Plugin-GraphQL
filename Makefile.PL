@@ -63,7 +63,7 @@ sub MY::postamble {
   <<EOF;
 pure_all :: README.md
 
-README.md : lib/Mojolicious/Plugin/GraphQL.pm
+README.md : \$(VERSION_FROM)
 \tpod2markdown \$< >\$\@
 
 containerprereq :

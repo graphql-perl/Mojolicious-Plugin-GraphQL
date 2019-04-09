@@ -19,6 +19,7 @@ WriteMakefile(
     "Mojolicious" => '7.60', # Mojo::Promise->all
     "strict" => 0,
     "warnings" => 0,
+    "Module::Runtime" => 0,
     "GraphQL" => '0.26', # promises
   },
   "TEST_REQUIRES" => {

@@ -20,7 +20,7 @@ WriteMakefile(
     "strict" => 0,
     "warnings" => 0,
     "Module::Runtime" => 0,
-    "GraphQL" => '0.26', # promises
+    "GraphQL" => '0.39', # subscriptions
     "curry" => 0,
   },
   "TEST_REQUIRES" => {

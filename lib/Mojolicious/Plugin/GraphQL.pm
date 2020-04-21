@@ -26,6 +26,7 @@ use constant promise_code => +{
   },
   resolve => Mojo::Promise->curry::resolve,
   reject => Mojo::Promise->curry::reject,
+  new => Mojo::Promise->curry::new,
 };
 
 my @DEFAULT_METHODS = qw(get post);

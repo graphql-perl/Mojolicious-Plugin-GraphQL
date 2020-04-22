@@ -73,6 +73,10 @@ sub _graphiql_wrap {
         operationName    => _safe_serialize( $p->param('operationName') ),
         resultString     => _safe_serialize( $p->param('result') ),
         variablesString  => _safe_serialize( $p->param('variables') ),
+        subscriptionEndpoint => to_json(
+          # if serialises to true (which empty-string will), turns on subs code
+          0
+        ),
       );
     }
     goto $wrappee;
@@ -310,6 +314,7 @@ __DATA__
 <!--
 Copied from https://github.com/graphql/express-graphql/blob/master/src/renderGraphiQL.js
 Converted to use the simple template to capture the CGI args
+Added the apollo-link-ws stuff, marked with "ADDED"
 -->
 <!--
 The request to this GraphQL server provided the header "Accept: text/html"
@@ -337,6 +342,11 @@ add "&raw" to the end of the URL within a browser.
   <script src="//cdn.jsdelivr.net/react/15.4.2/react.min.js"></script>
   <script src="//cdn.jsdelivr.net/react/15.4.2/react-dom.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/graphiql@<%= $graphiql_version %>/graphiql.min.js"></script>
+  <% if ($subscriptionEndpoint) { %>
+  <!-- ADDED -->
+  <script src="//unpkg.com/subscriptions-transport-ws@0.5.4/browser/client.js"></script>
+  <script src="//unpkg.com/graphiql-subscriptions-fetcher@0.0.2/browser/client.js"></script>
+  <% } %>
 </head>
 <body>
   <script>
@@ -408,10 +418,22 @@ add "&raw" to the end of the URL within a browser.
     function updateURL() {
       history.replaceState(null, null, locationQuery(parameters));
     }
+    // this section ADDED
+    <% if ($subscriptionEndpoint) { %>
+    var subscriptionEndpoint = <%== $subscriptionEndpoint %>;
+    let subscriptionsClient = new window.SubscriptionsTransportWs.SubscriptionClient(subscriptionEndpoint, {
+      lazy: true, // not in original
+      reconnect: true
+    });
+    let myCustomFetcher = window.GraphiQLSubscriptionsFetcher.graphQLFetcher(subscriptionsClient, graphQLFetcher);
+    <% } else { %>
+    let myCustomFetcher = graphQLFetcher;
+    <% } %>
+    // end ADDED
     // Render <GraphiQL /> into the body.
     ReactDOM.render(
       React.createElement(GraphiQL, {
-        fetcher: graphQLFetcher,
+        fetcher: myCustomFetcher, // ADDED changed from graphQLFetcher
         onEditQuery: onEditQuery,
         onEditVariables: onEditVariables,
         onEditOperationName: onEditOperationName,

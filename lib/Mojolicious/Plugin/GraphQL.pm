@@ -8,6 +8,7 @@ use GraphQL::Execution qw(execute);
 use GraphQL::Type::Library -all;
 use Module::Runtime qw(require_module);
 use Mojo::Promise;
+use curry;
 use Exporter 'import';
 
 our $VERSION = '0.14';
@@ -23,9 +24,8 @@ use constant promise_code => +{
     # Mojo::Promise, so force it to be one. hoping will be fixed soon
     Mojo::Promise->all(@promises);
   },
-  # currently only instance methods. not wasteful at all.
-  resolve => sub { Mojo::Promise->new->resolve(@_) },
-  reject => sub { Mojo::Promise->new->reject(@_) },
+  resolve => Mojo::Promise->curry::resolve,
+  reject => Mojo::Promise->curry::reject,
 };
 
 my @DEFAULT_METHODS = qw(get post);

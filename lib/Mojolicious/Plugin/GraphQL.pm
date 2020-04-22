@@ -110,7 +110,7 @@ sub register {
     my $converted = $class->to_graphql(@values);
     $conf = { %$conf, %$converted };
   }
-  die "Need schema or handler\n" if !grep $conf->{$_}, qw(schema handler);
+  die "Need schema\n" if !$conf->{schema};
   my $endpoint = $conf->{endpoint} || '/graphql';
   my $handler = $conf->{handler} || make_code_closure(
     @{$conf}{qw(schema root_value resolver)}
@@ -147,7 +147,7 @@ Mojolicious::Plugin::GraphQL - a plugin for adding GraphQL route handlers
   };
 
   # OR, equivalently:
-  plugin GraphQL => {handler => sub {
+  plugin GraphQL => {schema => $schema, handler => sub {
     my ($c, $body, $execute) = @_;
     # returns JSON-able Perl data
     $execute->(
@@ -162,7 +162,7 @@ Mojolicious::Plugin::GraphQL - a plugin for adding GraphQL route handlers
   }};
 
   # OR, with bespoke user-lookup and caching:
-  plugin GraphQL => {handler => sub {
+  plugin GraphQL => {schema => $schema, handler => sub {
     my ($c, $body, $execute) = @_;
     my $user = MyStuff::User->lookup($app->request->headers->header('X-Token'));
     die "Invalid user\n" if !$user; # turned into GraphQL { errors => [ ... ] }
@@ -232,8 +232,7 @@ String. Defaults to C</graphql>.
 
 =head2 schema
 
-A L<GraphQL::Schema> object. If not supplied, your C<handler> will need
-to be a closure that will pass a schema on to GraphQL.
+A L<GraphQL::Schema> object. As of 0.15, must be supplied.
 
 =head2 root_value
 

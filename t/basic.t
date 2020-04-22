@@ -17,7 +17,7 @@ plugin GraphQL => {
   convert => [ 'Test' ],
   graphiql => 1,
 };
-plugin GraphQL => {endpoint => '/graphql2', handler => sub {
+plugin GraphQL => {schema => $schema, endpoint => '/graphql2', handler => sub {
   my ($c, $body, $execute) = @_;
   # returns JSON-able Perl data
   $execute->(
@@ -30,7 +30,7 @@ plugin GraphQL => {endpoint => '/graphql2', handler => sub {
     undef, # $field_resolver
   );
 }};
-plugin GraphQL => {endpoint => '/graphql-live-and-let-die', handler => sub {
+plugin GraphQL => {schema => $schema, endpoint => '/graphql-live-and-let-die', handler => sub {
   die "I died!\n" }};
 plugin GraphQL => {
   endpoint => '/graphql-promise',

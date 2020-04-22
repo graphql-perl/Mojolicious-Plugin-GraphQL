@@ -60,7 +60,7 @@ sub make_code_closure {
 }
 
 sub _safe_serialize {
-  my $data = shift or return 'undefined';
+  my $data = shift // return 'undefined';
   my $json = to_json($data);
   $json =~ s#/#\\/#g;
   return $json;

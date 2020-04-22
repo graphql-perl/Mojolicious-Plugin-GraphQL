@@ -73,12 +73,12 @@ sub register {
     $class = "GraphQL::Plugin::Convert::$class";
     require_module $class;
     my $converted = $class->to_graphql(@values);
-    @{$conf}{keys %$converted} = values %$converted;
+    $conf = { %$conf, %$converted };
   }
   die "Need schema or handler\n" if !grep $conf->{$_}, qw(schema handler);
   my $endpoint = $conf->{endpoint} || '/graphql';
   my $handler = $conf->{handler} || make_code_closure(
-    map $conf->{$_}, qw(schema root_value resolver)
+    @{$conf}{qw(schema root_value resolver)}
   );
   my $ajax_route = sub {
     my ($c) = @_;

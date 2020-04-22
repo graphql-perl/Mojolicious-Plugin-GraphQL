@@ -66,21 +66,9 @@ sub _safe_serialize {
   return $json;
 }
 
-sub register {
-  my ($self, $app, $conf) = @_;
-  if ($conf->{convert}) {
-    my ($class, @values) = @{ $conf->{convert} };
-    $class = "GraphQL::Plugin::Convert::$class";
-    require_module $class;
-    my $converted = $class->to_graphql(@values);
-    $conf = { %$conf, %$converted };
-  }
-  die "Need schema or handler\n" if !grep $conf->{$_}, qw(schema handler);
-  my $endpoint = $conf->{endpoint} || '/graphql';
-  my $handler = $conf->{handler} || make_code_closure(
-    @{$conf}{qw(schema root_value resolver)}
-  );
-  my $ajax_route = sub {
+sub _make_route_handler {
+  my ($conf, $handler) = @_;
+  sub {
     my ($c) = @_;
     if (
       $conf->{graphiql} and
@@ -111,9 +99,26 @@ sub register {
     return $data->then(sub { $c->render(json => shift) }) if is_Promise($data);
     $c->render(json => $data);
   };
+}
+
+sub register {
+  my ($self, $app, $conf) = @_;
+  if ($conf->{convert}) {
+    my ($class, @values) = @{ $conf->{convert} };
+    $class = "GraphQL::Plugin::Convert::$class";
+    require_module $class;
+    my $converted = $class->to_graphql(@values);
+    $conf = { %$conf, %$converted };
+  }
+  die "Need schema or handler\n" if !grep $conf->{$_}, qw(schema handler);
+  my $endpoint = $conf->{endpoint} || '/graphql';
+  my $handler = $conf->{handler} || make_code_closure(
+    @{$conf}{qw(schema root_value resolver)}
+  );
   push @{$app->renderer->classes}, __PACKAGE__
     unless grep $_ eq __PACKAGE__, @{$app->renderer->classes};
-  $app->routes->any(\@DEFAULT_METHODS => $endpoint => $ajax_route);
+  my $route_handler = _make_route_handler($conf, $handler);
+  $app->routes->any(\@DEFAULT_METHODS => $endpoint => $route_handler);
 }
 
 1;

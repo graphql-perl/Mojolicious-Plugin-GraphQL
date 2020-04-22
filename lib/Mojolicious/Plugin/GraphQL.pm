@@ -55,7 +55,7 @@ sub _safe_serialize {
 }
 
 sub _graphiql_wrap {
-  my ($wrappee) = @_;
+  my ($wrappee, $use_subscription) = @_;
   sub {
     my ($c) = @_;
     if (
@@ -75,7 +75,9 @@ sub _graphiql_wrap {
         variablesString  => _safe_serialize( $p->param('variables') ),
         subscriptionEndpoint => to_json(
           # if serialises to true (which empty-string will), turns on subs code
-          0
+          $use_subscription
+            ? $c->url_for->to_abs->scheme('ws')
+            : 0
         ),
       );
     }
@@ -127,7 +129,7 @@ sub register {
   push @{$app->renderer->classes}, __PACKAGE__
     unless grep $_ eq __PACKAGE__, @{$app->renderer->classes};
   my $route_handler = _make_route_handler($handler);
-  $route_handler = _graphiql_wrap($route_handler)
+  $route_handler = _graphiql_wrap($route_handler, $conf->{schema}->subscription)
     if $conf->{graphiql};
   $app->routes->any(\@DEFAULT_METHODS => $endpoint => $route_handler);
 }

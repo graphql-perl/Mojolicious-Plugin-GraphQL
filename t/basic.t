@@ -96,4 +96,32 @@ subtest 'GraphQL with JSON error' => sub {
   );
 };
 
+plugin GraphQL => {
+  endpoint => '/graphql-subs',
+  graphiql => 1,
+  convert => [
+    'Test',
+    sub {
+      my $text = $_[1]->{s};
+      require GraphQL::AsyncIterator;
+      my $ai = GraphQL::AsyncIterator->new(
+        promise_code => Mojolicious::Plugin::GraphQL->promise_code,
+      );
+      my ($i, $cb) = 0;
+      $cb = sub {
+        eval { $ai->publish({ timedEcho => $text }) };
+        return $ai->close_tap if $@ or $i++ >= 2;
+        Mojo::IOLoop->timer(0.1 => $cb);
+      };
+      $cb->();
+      $ai;
+    },
+  ],
+};
+subtest 'GraphiQL subs' => sub {
+  $t->get_ok(
+    '/graphql-subs', \%accept_html
+  )->content_like(qr/SubscriptionsTransportWs/, 'Content has subs stuff');
+};
+
 done_testing;

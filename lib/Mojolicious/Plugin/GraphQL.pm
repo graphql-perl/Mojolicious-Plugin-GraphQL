@@ -76,15 +76,16 @@ sub _make_route_handler {
       ($c->req->headers->header('Accept')//'') =~ /^text\/html\b/ and
       !defined $c->req->query_params->param('raw')
     ) {
+      my $p = $c->req->query_params;
       return $c->render(
         template => 'graphiql',
         layout => undef,
         title            => 'GraphiQL',
         graphiql_version => 'latest',
-        queryString      => _safe_serialize( $c->req->query_params->param('query') ),
-        operationName    => _safe_serialize( $c->req->query_params->param('operationName') ),
-        resultString     => _safe_serialize( $c->req->query_params->param('result') ),
-        variablesString  => _safe_serialize( $c->req->query_params->param('variables') ),
+        queryString      => _safe_serialize( $p->param('query') ),
+        operationName    => _safe_serialize( $p->param('operationName') ),
+        resultString     => _safe_serialize( $p->param('result') ),
+        variablesString  => _safe_serialize( $p->param('variables') ),
       );
     }
     my $data;

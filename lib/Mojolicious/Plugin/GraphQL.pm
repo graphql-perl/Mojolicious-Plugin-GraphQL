@@ -29,20 +29,7 @@ use constant promise_code => +{
 };
 
 my @DEFAULT_METHODS = qw(get post);
-use constant EXECUTE => sub {
-  my ($schema, $query, $root_value, $per_request, $variables, $operationName, $field_resolver) = @_;
-  execute(
-    $schema,
-    $query,
-    $root_value,
-    $per_request,
-    $variables,
-    $operationName,
-    $field_resolver,
-    # promise code - not overridable
-    promise_code(),
-  );
-};
+use constant EXECUTE => sub { $_[7] = promise_code(); goto &execute; };
 sub make_code_closure {
   my ($schema, $root_value, $field_resolver) = @_;
   sub {

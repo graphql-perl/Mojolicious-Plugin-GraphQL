@@ -123,5 +123,50 @@ subtest 'GraphiQL subs' => sub {
     '/graphql-subs', \%accept_html
   )->content_like(qr/SubscriptionsTransportWs/, 'Content has subs stuff');
 };
+subtest 'subs response' => sub {
+  my $wsp = Mojolicious::Plugin::GraphQL->ws_protocol;
+  my $init = { payload => {}, type => $wsp->{GQL_CONNECTION_INIT} };
+  my $ack = { payload => {}, type => $wsp->{GQL_CONNECTION_ACK} };
+  my $start1 = {
+    payload => { query => 'subscription s { timedEcho(s: "yo") }' },
+    type => $wsp->{GQL_START},
+    id => 1,
+  };
+  my $datayo1 = {
+    payload => { data => { timedEcho => 'yo' } },
+    type => $wsp->{GQL_DATA},
+    id => 1,
+  };
+  my $stop1 = {
+    payload => {}, type => $wsp->{GQL_STOP},
+    id => 1,
+  };
+  my $complete1 = {
+    payload => {},
+    type => $wsp->{GQL_COMPLETE},
+    id => 1,
+  };
+  my $start2 = { %$start1, id => 2 };
+  my $datayo2 = { %$datayo1, id => 2 };
+  my $complete2 = { %$complete1, id => 2 };
+  $t->websocket_ok('/graphql-subs')
+    ->send_ok({json => $init})
+    ->message_ok->json_message_is($ack)
+    ->send_ok({json => $start1})
+    ->message_ok->json_message_is($datayo1)
+    ->or(sub { diag explain $t->message })
+    ->send_ok({json => $stop1})
+    ->message_ok->json_message_is($complete1)
+    ->finish_ok;
+  $t->websocket_ok('/graphql-subs')
+    ->send_ok({json => $init})
+    ->message_ok->json_message_is($ack)
+    ->send_ok({json => $start2})
+    ->message_ok->json_message_is($datayo2)
+    ->message_ok->json_message_is($datayo2)
+    ->message_ok->json_message_is($datayo2)
+    ->message_ok->json_message_is($complete2)
+    ->finish_ok;
+};
 
 done_testing;

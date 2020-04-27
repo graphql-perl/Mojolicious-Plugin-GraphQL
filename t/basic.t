@@ -16,6 +16,7 @@ type Query {
 }
 EOF
 my $t = Test::Mojo->new;
+my %helloWorld_query = (json => {query => "{helloWorld}"});
 
 # implicitly /graphql
 plugin GraphQL => {
@@ -31,9 +32,7 @@ subtest 'GraphiQL' => sub {
   })->content_like(qr/query: "# Welcome/, 'Content en/decodes right');
 };
 subtest 'GraphQL with POST' => sub {
-  $t->post_ok('/graphql', { Content_Type => 'application/json' },
-    '{"query":"{helloWorld}"}',
-  )->json_is(
+  $t->post_ok('/graphql', %helloWorld_query)->json_is(
     { 'data' => { 'helloWorld' => 'Hello, world!' } },
   );
 };
@@ -56,9 +55,7 @@ plugin GraphQL => {
   },
 };
 subtest 'GraphQL with route-handler' => sub {
-  $t->post_ok('/graphql2', { Content_Type => 'application/json' },
-    '{"query":"{helloWorld}"}',
-  )->json_is(
+  $t->post_ok('/graphql2', %helloWorld_query)->json_is(
     { 'data' => { 'helloWorld' => 'Hello, world!' } },
   );
 };
@@ -68,10 +65,7 @@ plugin GraphQL => {
   schema => $schema, handler => sub { die "I died!\n" },
 };
 subtest 'GraphQL with die' => sub {
-  $t->post_ok('/graphql-live-and-let-die',
-    { Content_Type => 'application/json' },
-    '{"query":"{helloWorld}"}',
-  )->json_is(
+  $t->post_ok('/graphql-live-and-let-die', %helloWorld_query)->json_is(
     { errors => [ { message => "I died!\n" } ] },
   );
 };
@@ -86,15 +80,12 @@ plugin GraphQL => {
   } },
 };
 subtest 'GraphQL with promise' => sub {
-  my $tm = $t->post_ok('/graphql-promise',
-    { Content_Type => 'application/json' },
-    '{"query":"{helloWorld}"}',
-  )->json_is(
+  $t->post_ok('/graphql-promise', %helloWorld_query)->json_is(
     { 'data' => { 'helloWorld' => 'Yo!' } },
   );
 };
 subtest 'GraphQL with JSON error' => sub {
-  my $tm = $t->post_ok('/graphql-promise',
+  $t->post_ok('/graphql-promise',
     { Content_Type => 'application/json' },
     '{"query":"{helloWorld}""}',
   )->json_is(

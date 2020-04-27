@@ -66,12 +66,11 @@ sub _safe_serialize {
   return $json;
 }
 
-sub _make_route_handler {
-  my ($conf, $handler) = @_;
+sub _graphiql_wrap {
+  my ($wrappee) = @_;
   sub {
     my ($c) = @_;
     if (
-      $conf->{graphiql} and
       # not as ignores Firefox-sent multi-accept: $c->accepts('', 'html') and
       ($c->req->headers->header('Accept')//'') =~ /^text\/html\b/ and
       !defined $c->req->query_params->param('raw')
@@ -88,6 +87,14 @@ sub _make_route_handler {
         variablesString  => _safe_serialize( $p->param('variables') ),
       );
     }
+    goto $wrappee;
+  };
+}
+
+sub _make_route_handler {
+  my ($handler) = @_;
+  sub {
+    my ($c) = @_;
     my $data;
     my $body = eval { decode_json($c->req->body) };
     if ($@) {
@@ -118,7 +125,9 @@ sub register {
   );
   push @{$app->renderer->classes}, __PACKAGE__
     unless grep $_ eq __PACKAGE__, @{$app->renderer->classes};
-  my $route_handler = _make_route_handler($conf, $handler);
+  my $route_handler = _make_route_handler($handler);
+  $route_handler = _graphiql_wrap($route_handler)
+    if $conf->{graphiql};
   $app->routes->any(\@DEFAULT_METHODS => $endpoint => $route_handler);
 }
 

@@ -17,6 +17,9 @@ type Query {
 EOF
 my $t = Test::Mojo->new;
 my %helloWorld_query = (json => {query => "{helloWorld}"});
+my %accept_html = (
+  Accept => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+);
 
 # implicitly /graphql
 plugin GraphQL => {
@@ -24,12 +27,12 @@ plugin GraphQL => {
   graphiql => 1,
 };
 subtest 'GraphiQL' => sub {
-  $t->get_ok('/graphql', {
-    Accept => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-  })->content_like(qr/React.createElement\(GraphiQL/, 'Content as expected');
-  $t->get_ok('/graphql?query=%23%20Welcome%0A%7BhelloWorld%7D', {
-    Accept => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-  })->content_like(qr/query: "# Welcome/, 'Content en/decodes right');
+  $t->get_ok(
+    '/graphql', \%accept_html
+  )->content_like(qr/React.createElement\(GraphiQL/, 'Content as expected');
+  $t->get_ok(
+    '/graphql?query=%23%20Welcome%0A%7BhelloWorld%7D', \%accept_html
+  )->content_like(qr/query: "# Welcome/, 'Content en/decodes right');
 };
 subtest 'GraphQL with POST' => sub {
   $t->post_ok('/graphql', %helloWorld_query)->json_is(

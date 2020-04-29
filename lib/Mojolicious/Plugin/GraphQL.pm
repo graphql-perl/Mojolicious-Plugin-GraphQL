@@ -91,8 +91,8 @@ sub _make_route_handler {
       $data = eval { $handler->($c, $body, EXECUTE()) } if !$@;
       $data = { errors => [ { message => $@ } ] } if $@;
     }
-    return $data->then(sub { $c->render(json => shift) }) if is_Promise($data);
-    $c->render(json => $data);
+    return $c->render(json => $data) if !is_Promise($data);
+    $data->then(sub { $c->render(json => shift) });
   };
 }
 

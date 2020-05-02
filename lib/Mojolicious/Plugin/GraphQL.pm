@@ -78,19 +78,28 @@ sub _graphiql_wrap {
   };
 }
 
+sub _decode {
+  my ($bytes) = @_;
+  my $body = eval { decode_json($bytes) };
+  # conceal error info like versions from attackers
+  return (0, { errors => [ { message => "Malformed request" } ] }) if $@;
+  (1, $body);
+}
+
+sub _execute {
+  my ($c, $body, $handler, $execute) = @_;
+  my $data = eval { $handler->($c, $body, $execute) };
+  return { errors => [ { message => $@ } ] } if $@;
+  $data;
+}
+
 sub _make_route_handler {
   my ($handler) = @_;
   sub {
     my ($c) = @_;
-    my $data;
-    my $body = eval { decode_json($c->req->body) };
-    if ($@) {
-      # conceal error info like versions from attackers
-      $data = { errors => [ { message => "Malformed request" } ] };
-    } else {
-      $data = eval { $handler->($c, $body, EXECUTE()) } if !$@;
-      $data = { errors => [ { message => $@ } ] } if $@;
-    }
+    my ($decode_ok, $body) = _decode($c->req->body);
+    return $c->render(json => $body) if !$decode_ok;
+    my $data = _execute($c, $body, $handler, EXECUTE());
     return $c->render(json => $data) if !is_Promise($data);
     $data->then(sub { $c->render(json => shift) });
   };

@@ -344,12 +344,11 @@ add "&raw" to the end of the URL within a browser.
   <script src="//cdn.jsdelivr.net/npm/graphiql@<%= $graphiql_version %>/graphiql.min.js"></script>
   <% if ($subscriptionEndpoint) { %>
   <!-- ADDED -->
-  <script src="//unpkg.com/subscriptions-transport-ws@0.5.4/browser/client.js"></script>
-  <script src="//unpkg.com/graphiql-subscriptions-fetcher@0.0.2/browser/client.js"></script>
+  <script src="//unpkg.com/subscriptions-transport-ws@0.9.16/browser/client.js"></script>
   <% } %>
 </head>
 <body>
-  <script>
+  <script type="module">
     // Collect the URL parameters
     var parameters = {};
     window.location.search.substr(1).split('&').forEach(function (entry) {
@@ -420,12 +419,42 @@ add "&raw" to the end of the URL within a browser.
     }
     // this section ADDED
     <% if ($subscriptionEndpoint) { %>
+
+    // this replaces the apollo GraphiQL-Subscriptions-Fetcher which is now incompatible with 0.6+ of subscriptions-transport-ws
+    // based on matiasanaya PR to fix but with improvement to only look at definition of operation being executed
+    import { parse } from "//unpkg.com/graphql@15.0.0/language/index.mjs";
+    const subsGraphQLFetcher = (subscriptionsClient, fallbackFetcher) => {
+      const hasSubscriptionOperation = (graphQlParams) => {
+        const thisOperation = graphQlParams.operationName;
+        const queryDoc = parse(graphQlParams.query);
+        const opDefinitions = queryDoc.definitions.filter(
+          x => x.kind === 'OperationDefinition'
+        );
+        const thisDefinition = opDefinitions.length == 1
+          ? opDefinitions[0]
+          : opDefinitions.filter(x => x.name.value === thisOperation)[0];
+        return thisDefinition.operation === 'subscription';
+      };
+      let activeSubscription = false;
+      return (graphQLParams) => {
+        if (subscriptionsClient && activeSubscription) {
+          subscriptionsClient.unsubscribeAll();
+        }
+        if (subscriptionsClient && hasSubscriptionOperation(graphQLParams)) {
+          activeSubscription = true;
+          return subscriptionsClient.request(graphQLParams);
+        } else {
+          return fallbackFetcher(graphQLParams);
+        }
+      };
+    };
+
     var subscriptionEndpoint = <%== $subscriptionEndpoint %>;
     let subscriptionsClient = new window.SubscriptionsTransportWs.SubscriptionClient(subscriptionEndpoint, {
       lazy: true, // not in original
       reconnect: true
     });
-    let myCustomFetcher = window.GraphiQLSubscriptionsFetcher.graphQLFetcher(subscriptionsClient, graphQLFetcher);
+    let myCustomFetcher = subsGraphQLFetcher(subscriptionsClient, graphQLFetcher);
     <% } else { %>
     let myCustomFetcher = graphQLFetcher;
     <% } %>

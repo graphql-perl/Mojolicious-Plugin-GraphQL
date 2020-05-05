@@ -11,7 +11,7 @@ use Mojo::Promise;
 use curry;
 use Exporter 'import';
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 our @EXPORT_OK = qw(promise_code);
 
 use constant promise_code => +{

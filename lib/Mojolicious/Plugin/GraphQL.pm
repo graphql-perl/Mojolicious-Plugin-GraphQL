@@ -6,6 +6,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::JSON qw(decode_json to_json);
 use GraphQL::Execution qw(execute);
 use GraphQL::Type::Library -all;
+use GraphQL::Debug qw(_debug);
 use Module::Runtime qw(require_module);
 use Mojo::Promise;
 use curry;
@@ -14,6 +15,7 @@ use Exporter 'import';
 our $VERSION = '0.15';
 our @EXPORT_OK = qw(promise_code);
 
+use constant DEBUG => $ENV{GRAPHQL_DEBUG};
 use constant promise_code => +{
   all => sub {
     # current Mojo::Promise->all only works on promises, force that
@@ -168,6 +170,7 @@ sub _make_connection_handler {
           }
           my $promise;
           $context->{async_iterator} = $result->map_then(sub {
+            DEBUG and _debug('MLPlugin.ai_cb', $context, @_);
             $c->send({json => {
               payload => $_[0],
               type => ws_protocol->{GQL_DATA},

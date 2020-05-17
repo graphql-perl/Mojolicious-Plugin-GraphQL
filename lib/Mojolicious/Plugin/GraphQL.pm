@@ -147,9 +147,21 @@ sub _make_connection_handler {
     my $msg_type = $body->{type};
     if ($msg_type eq ws_protocol->{GQL_CONNECTION_INIT}) {
       $context->{connected} = 1;
-      return $c->send({json => {
+      $c->send({json => {
         type => ws_protocol->{GQL_CONNECTION_ACK}
       }});
+      if ($context->{keepalive}) {
+        my $cb;
+        $cb = sub {
+          return unless $c->tx and $context->{keepalive};
+          $c->send({json => {
+            type => ws_protocol->{GQL_CONNECTION_KEEP_ALIVE},
+          }});
+          Mojo::IOLoop->timer($context->{keepalive} => $cb);
+        };
+        $cb->();
+      }
+      return;
     } elsif ($msg_type eq ws_protocol->{GQL_START}) {
       $context->{id} = $body->{id};
       my $data = _execute(
@@ -206,7 +218,7 @@ sub _make_connection_handler {
 }
 
 sub _make_subs_route_handler {
-  my ($handler, $subscribe_resolver) = @_;
+  my ($handler, $subscribe_resolver, $keepalive) = @_;
   require GraphQL::Subscription;
   sub {
     my ($c) = @_;
@@ -214,7 +226,7 @@ sub _make_subs_route_handler {
     my $sec_websocket_protocol = $c->tx->req->headers->sec_websocket_protocol;
     $c->tx->res->headers->sec_websocket_protocol($sec_websocket_protocol)
       if $sec_websocket_protocol;
-    my %context;
+    my %context = (keepalive => $keepalive);
     $c->on(text => _make_connection_handler($handler, $subscribe_resolver, \%context));
     $c->on(finish => sub {
       $context{async_iterator}->close_tap if $context{async_iterator};
@@ -246,7 +258,7 @@ sub register {
   if ($conf->{schema}->subscription) {
     # must add "websocket" route before "any" because checked in define order
     my $subs_route_handler = _make_subs_route_handler(
-      $handler, $conf->{subscribe_resolver}
+      $handler, @{$conf}{qw(subscribe_resolver keepalive)},
     );
     $r->websocket($endpoint => $subs_route_handler);
   }
@@ -399,6 +411,11 @@ text/html> will return the GraphiQL user interface. Defaults to false.
 
   # Mojolicious::Lite
   plugin GraphQL => {schema => $schema, graphiql => 1};
+
+=head2 keepalive
+
+Defaults to 0, which means do not send. Otherwise will send a keep-alive
+packet over websocket every specified number of seconds.
 
 =head1 METHODS
 

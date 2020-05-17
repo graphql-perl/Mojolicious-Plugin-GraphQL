@@ -170,4 +170,27 @@ subtest 'subs response' => sub {
     ->finish_ok;
 };
 
+plugin GraphQL => {
+  endpoint => '/graphql-subska',
+  convert => [
+    'Test',
+    \&subs_resolver,
+  ],
+  keepalive => 0.08,
+};
+subtest 'subs keepalive' => sub {
+  my $ka = { type => $wsp->{GQL_CONNECTION_KEEP_ALIVE} };
+  $t->websocket_ok('/graphql-subska')
+    ->send_ok({json => $init})
+    ->message_ok->json_message_is($ack)
+    ->message_ok->json_message_is($ka)
+    ->or(sub { diag explain $t->message })
+    ->send_ok({json => $start1})
+    ->message_ok->json_message_is($datayo1)
+    ->or(sub { diag explain $t->message })
+    ->message_ok->json_message_is($ka)
+    ->or(sub { diag explain $t->message })
+    ->finish_ok;
+};
+
 done_testing;

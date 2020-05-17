@@ -96,27 +96,41 @@ subtest 'GraphQL with JSON error' => sub {
   );
 };
 
+sub subs_resolver {
+  my $text = $_[1]->{s};
+  require GraphQL::AsyncIterator;
+  my $ai = GraphQL::AsyncIterator->new(
+    promise_code => $_[3]->{promise_code},
+  );
+  my $field_name = $_[3]->{field_name};
+  my ($i, $cb) = 0;
+  $cb = sub {
+    eval { $ai->publish({ $field_name => $text }) };
+    return $ai->close_tap if $@ or $i++ >= 2;
+    Mojo::IOLoop->timer(0.1 => $cb);
+  };
+  $cb->();
+  $ai;
+}
+my $wsp = Mojolicious::Plugin::GraphQL->ws_protocol;
+my $init = { type => $wsp->{GQL_CONNECTION_INIT} };
+my $ack = { type => $wsp->{GQL_CONNECTION_ACK} };
+my $start1 = {
+  payload => { query => 'subscription s { timedEcho(s: "yo") }' },
+  type => $wsp->{GQL_START},
+  id => 1,
+};
+my $datayo1 = {
+  payload => { data => { timedEcho => 'yo' } },
+  type => $wsp->{GQL_DATA},
+  id => 1,
+};
 plugin GraphQL => {
   endpoint => '/graphql-subs',
   graphiql => 1,
   convert => [
     'Test',
-    sub {
-      my $text = $_[1]->{s};
-      require GraphQL::AsyncIterator;
-      my $ai = GraphQL::AsyncIterator->new(
-        promise_code => $_[3]->{promise_code},
-      );
-      my $field_name = $_[3]->{field_name};
-      my ($i, $cb) = 0;
-      $cb = sub {
-        eval { $ai->publish({ $field_name => $text }) };
-        return $ai->close_tap if $@ or $i++ >= 2;
-        Mojo::IOLoop->timer(0.1 => $cb);
-      };
-      $cb->();
-      $ai;
-    },
+    \&subs_resolver,
   ],
 };
 subtest 'GraphiQL subs' => sub {
@@ -125,19 +139,6 @@ subtest 'GraphiQL subs' => sub {
   )->content_like(qr/SubscriptionsTransportWs/, 'Content has subs stuff');
 };
 subtest 'subs response' => sub {
-  my $wsp = Mojolicious::Plugin::GraphQL->ws_protocol;
-  my $init = { type => $wsp->{GQL_CONNECTION_INIT} };
-  my $ack = { type => $wsp->{GQL_CONNECTION_ACK} };
-  my $start1 = {
-    payload => { query => 'subscription s { timedEcho(s: "yo") }' },
-    type => $wsp->{GQL_START},
-    id => 1,
-  };
-  my $datayo1 = {
-    payload => { data => { timedEcho => 'yo' } },
-    type => $wsp->{GQL_DATA},
-    id => 1,
-  };
   my $stop1 = {
     type => $wsp->{GQL_STOP},
     id => 1,

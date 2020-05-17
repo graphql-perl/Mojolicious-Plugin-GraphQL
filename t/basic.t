@@ -107,9 +107,10 @@ plugin GraphQL => {
       my $ai = GraphQL::AsyncIterator->new(
         promise_code => $_[3]->{promise_code},
       );
+      my $field_name = $_[3]->{field_name};
       my ($i, $cb) = 0;
       $cb = sub {
-        eval { $ai->publish({ timedEcho => $text }) };
+        eval { $ai->publish({ $field_name => $text }) };
         return $ai->close_tap if $@ or $i++ >= 2;
         Mojo::IOLoop->timer(0.1 => $cb);
       };

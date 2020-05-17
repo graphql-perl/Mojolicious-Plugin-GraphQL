@@ -105,7 +105,7 @@ plugin GraphQL => {
       my $text = $_[1]->{s};
       require GraphQL::AsyncIterator;
       my $ai = GraphQL::AsyncIterator->new(
-        promise_code => Mojolicious::Plugin::GraphQL->promise_code,
+        promise_code => $_[3]->{promise_code},
       );
       my ($i, $cb) = 0;
       $cb = sub {

@@ -126,8 +126,8 @@ subtest 'GraphiQL subs' => sub {
 };
 subtest 'subs response' => sub {
   my $wsp = Mojolicious::Plugin::GraphQL->ws_protocol;
-  my $init = { payload => {}, type => $wsp->{GQL_CONNECTION_INIT} };
-  my $ack = { payload => {}, type => $wsp->{GQL_CONNECTION_ACK} };
+  my $init = { type => $wsp->{GQL_CONNECTION_INIT} };
+  my $ack = { type => $wsp->{GQL_CONNECTION_ACK} };
   my $start1 = {
     payload => { query => 'subscription s { timedEcho(s: "yo") }' },
     type => $wsp->{GQL_START},
@@ -139,11 +139,10 @@ subtest 'subs response' => sub {
     id => 1,
   };
   my $stop1 = {
-    payload => {}, type => $wsp->{GQL_STOP},
+    type => $wsp->{GQL_STOP},
     id => 1,
   };
   my $complete1 = {
-    payload => {},
     type => $wsp->{GQL_COMPLETE},
     id => 1,
   };

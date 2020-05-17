@@ -140,13 +140,15 @@ sub _make_connection_handler {
     my ($c, $bytes) = @_;
     my ($decode_ok, $body) = _decode($bytes);
     return $c->send({json => {
-      payload => $body, type => ws_protocol->{GQL_ERROR}
+      payload => $body,
+      type => ($context->{connected}
+        ? ws_protocol->{GQL_ERROR} : ws_protocol->{GQL_CONNECTION_ERROR}),
     }}) if !$decode_ok;
     my $msg_type = $body->{type};
     if ($msg_type eq ws_protocol->{GQL_CONNECTION_INIT}) {
       $context->{connected} = 1;
       return $c->send({json => {
-        payload => {}, type => ws_protocol->{GQL_CONNECTION_ACK}
+        type => ws_protocol->{GQL_CONNECTION_ACK}
       }});
     } elsif ($msg_type eq ws_protocol->{GQL_START}) {
       $context->{id} = $body->{id};
@@ -178,7 +180,6 @@ sub _make_connection_handler {
             }});
             $promise = $context->{async_iterator}->next_p;
             $c->send({json => {
-              payload => {},
               type => ws_protocol->{GQL_COMPLETE},
               id => $context->{id},
             }}) if !$promise; # exhausted, tell client
@@ -188,13 +189,13 @@ sub _make_connection_handler {
         sub {
           $c->send({json => {
             payload => $_[0], type => ws_protocol->{GQL_ERROR},
+            id => $context->{id},
           }});
           $c->finish;
         },
       );
     } elsif ($msg_type eq ws_protocol->{GQL_STOP}) {
       $c->send({json => {
-        payload => {},
         type => ws_protocol->{GQL_COMPLETE},
         id => $context->{id},
       }});

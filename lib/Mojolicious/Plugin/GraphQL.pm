@@ -12,7 +12,7 @@ use Mojo::Promise;
 use curry;
 use Exporter 'import';
 
-our $VERSION = '0.18';
+our $VERSION = '0.19';
 our @EXPORT_OK = qw(promise_code);
 
 use constant DEBUG => $ENV{GRAPHQL_DEBUG};
